@@ -19,7 +19,17 @@ export default function PostCard({ post }) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition">
       <div className="flex items-center gap-3 mb-4">
-        <span className="text-4xl">{post.authorAvatar}</span>
+        {/* Foto de perfil o emoji */}
+        {post.authorPhotoURL ? (
+          <img 
+            src={post.authorPhotoURL} 
+            alt={post.authorName}
+            className="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow"
+          />
+        ) : (
+          <span className="text-4xl">{post.authorAvatar}</span>
+        )}
+        
         <div>
           <div className="font-bold text-gray-800">{post.authorName}</div>
           <div className="text-sm text-gray-500">{formatDate(post.timestamp)}</div>

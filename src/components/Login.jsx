@@ -3,6 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Login() {
   const { familyMembers, login } = useAuth();
 
+  const handleLogin = async (userId) => {
+    await login(userId);
+    // El App.jsx manejará la redirección según si tiene perfil o no
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-6">
       <div className="max-w-4xl w-full">
@@ -16,13 +21,17 @@ export default function Login() {
           {familyMembers.map((member) => (
             <button
               key={member.id}
-              onClick={() => login(member.id)}
+              onClick={() => handleLogin(member.id)}
               className="bg-white rounded-2xl p-6 shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 transition-all duration-300"
             >
               <div className="text-5xl mb-3">{member.avatar}</div>
               <div className="text-lg font-bold text-gray-800">{member.name}</div>
             </button>
           ))}
+        </div>
+
+        <div className="text-center mt-8 text-white/70 text-sm">
+          🔒 Sitio privado - Solo familia paterna
         </div>
       </div>
     </div>

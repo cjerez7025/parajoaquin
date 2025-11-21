@@ -8,7 +8,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(undefined); // 👈 undefined = aún no sabemos
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const familyMembers = [
@@ -42,16 +42,16 @@ export const AuthProvider = ({ children }) => {
 
   const loadUserProfile = async (userId) => {
     try {
-      console.log('Loading profile for:', userId);
+      console.log('Loading profile for:', userId); // 👈 Debug
       const docRef = doc(db, 'users', userId);
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
         const profileData = docSnap.data();
-        console.log('Profile loaded:', profileData);
+        console.log('Profile loaded:', profileData); // 👈 Debug
         setUserProfile(profileData);
       } else {
-        console.log('No profile found for:', userId);
+        console.log('No profile found for:', userId); // 👈 Debug
         setUserProfile(null);
       }
     } catch (error) {
