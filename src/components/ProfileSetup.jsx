@@ -4,7 +4,7 @@ import { useProfile } from '../hooks/useProfile';
 import ProfilePhotoUpload from './ProfilePhotoUpload';
 
 export default function ProfileSetup() {
-  const { currentUser } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { createProfile } = useProfile(currentUser?.id);
   
   const [photoFile, setPhotoFile] = useState(null);
@@ -29,7 +29,7 @@ export default function ProfileSetup() {
     try {
       await createProfile(currentUser.id, formData, photoFile);
       alert('¡Perfil creado exitosamente! 💙');
-      window.location.reload(); // Recargar para actualizar el contexto
+      window.location.reload();
     } catch (error) {
       console.error('Error creating profile:', error);
       alert('Error al crear perfil. Intenta de nuevo.');
@@ -38,10 +38,27 @@ export default function ProfileSetup() {
     }
   };
 
+  const handleBack = () => {
+    if (confirm('¿Volver al login sin crear perfil?')) {
+      logout();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8">
-        <div className="text-center mb-8">
+      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 relative">
+        {/* Botón Volver */}
+        <button
+          onClick={handleBack}
+          className="absolute top-4 left-4 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Volver
+        </button>
+
+        <div className="text-center mb-8 mt-8">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
             ¡Bienvenido! 👋
           </h1>
@@ -74,7 +91,7 @@ export default function ProfileSetup() {
             />
           </div>
 
-          {/* Nombre corto (prellenado) */}
+          {/* Nombre corto */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Cómo aparecerás
