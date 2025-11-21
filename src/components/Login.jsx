@@ -54,7 +54,7 @@ export default function Login() {
             <h1 className="text-6xl font-light text-white">Para Joaquín</h1>
           </div>
           <p className="text-2xl text-white/90 mb-4">Un proyecto familiar lleno de amor</p>
-          <p className="text-lg text-white/80">¿Quién quiere publicar hoy?</p>
+          <p className="text-lg text-white/80">¿Quién quiere publicar hoy? 💙</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -99,5 +99,6 @@ export default function Login() {
         </div>
       </div>
     </div>
+
   );
 }
