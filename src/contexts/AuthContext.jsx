@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 const AuthContext = createContext();
@@ -9,23 +9,41 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(undefined);
+  const [allProfiles, setAllProfiles] = useState([]); // 👈 NUEVO: Todos los perfiles
   const [loading, setLoading] = useState(true);
+  const [profilesLoading, setProfilesLoading] = useState(true);
 
-  const familyMembers = [
-    { id: 'papa', name: 'Papá', avatar: '👨', role: 'Padre' },
-    { id: 'hermano-mayor', name: 'Hermano Mayor', avatar: '👦', role: 'Hermano' },
-    { id: 'hermana', name: 'Hermana', avatar: '👧', role: 'Hermana' },
-    { id: 'hermano-menor', name: 'Hermano Menor', avatar: '🧒', role: 'Hermano' },
-    { id: 'abuela', name: 'Abuela', avatar: '👵', role: 'Abuela' },
-    { id: 'abuelo', name: 'Abuelo', avatar: '👴', role: 'Abuelo' },
-    { id: 'tios', name: 'Tíos/Familia', avatar: '👨‍👩‍👦', role: 'Familia Extendida' },
-    { id: 'joaquin', name: 'Joaquín', avatar: '💙', role: 'Hijo' }
-  ];
+  // Cargar todos los perfiles al inicio
+  useEffect(() => {
+    loadAllProfiles();
+  }, []);
 
-  // Cargar usuario guardado al inicio
+  // Cargar usuario guardado
   useEffect(() => {
     loadUserFromStorage();
   }, []);
+
+  const loadAllProfiles = async () => {
+    try {
+      console.log('Loading all profiles...');
+      const querySnapshot = await getDocs(collection(db, 'users'));
+      const profiles = [];
+      
+      querySnapshot.forEach((doc) => {
+        profiles.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      console.log('Profiles loaded:', profiles);
+      setAllProfiles(profiles);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+    } finally {
+      setProfilesLoading(false);
+    }
+  };
 
   const loadUserFromStorage = async () => {
     try {
@@ -34,11 +52,11 @@ export const AuthProvider = ({ children }) => {
         const user = JSON.parse(savedUser);
         setCurrentUser(user);
         
-        // Solo cargar perfil si NO es Joaquín
+        // Solo cargar perfil completo si NO es Joaquín
         if (user.id !== 'joaquin') {
           await loadUserProfile(user.id);
         } else {
-          setUserProfile(null); // Joaquín no necesita perfil
+          setUserProfile(null);
         }
       }
     } catch (error) {
@@ -70,20 +88,23 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userId) => {
     try {
-      const user = familyMembers.find(m => m.id === userId);
-      if (user) {
-        setCurrentUser(user);
-        localStorage.setItem('currentUser', JSON.stringify(user));
+      // Buscar el perfil en allProfiles
+      const profile = allProfiles.find(p => p.id === userId);
+      
+      if (profile) {
+        const user = {
+          id: userId,
+          name: profile.displayName || profile.shortName,
+          avatar: profile.photoURL ? null : '👤'
+        };
         
-        // Solo cargar perfil si NO es Joaquín
-        if (userId !== 'joaquin') {
-          await loadUserProfile(userId);
-        } else {
-          setUserProfile(null);
-        }
+        setCurrentUser(user);
+        setUserProfile(profile);
+        localStorage.setItem('currentUser', JSON.stringify(user));
         
         return true;
       }
+      
       return false;
     } catch (error) {
       console.error('Error during login:', error);
@@ -91,10 +112,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Login especial para Joaquín (sin perfil en Firestore)
+  const loginAsJoaquin = () => {
+    const joaquinUser = {
+      id: 'joaquin',
+      name: 'Joaquín',
+      avatar: '💙'
+    };
+    
+    setCurrentUser(joaquinUser);
+    setUserProfile(null);
+    localStorage.setItem('currentUser', JSON.stringify(joaquinUser));
+  };
+
   const logout = () => {
     setCurrentUser(null);
     setUserProfile(undefined);
     localStorage.removeItem('currentUser');
+  };
+
+  const refreshProfiles = async () => {
+    await loadAllProfiles();
   };
 
   const refreshProfile = async () => {
@@ -106,10 +144,13 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     userProfile,
-    familyMembers,
+    allProfiles,
+    profilesLoading,
     login,
+    loginAsJoaquin,
     logout,
     refreshProfile,
+    refreshProfiles,
     loading
   };
 

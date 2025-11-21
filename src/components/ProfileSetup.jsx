@@ -1,24 +1,24 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useProfile } from '../hooks/useProfile';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase/config';
 import ProfilePhotoUpload from './ProfilePhotoUpload';
 
-export default function ProfileSetup() {
-  const { currentUser, logout } = useAuth();
-  const { createProfile } = useProfile(currentUser?.id);
-  
+export default function ProfileSetup({ onCancel }) {
+  const { refreshProfiles, login } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [formData, setFormData] = useState({
     displayName: '',
-    shortName: currentUser?.name || '',
-    role: currentUser?.role || '',
+    shortName: '',
+    role: '',
     bio: ''
   });
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!formData.displayName.trim()) {
       alert('Por favor ingresa tu nombre completo');
       return;
@@ -27,43 +27,63 @@ export default function ProfileSetup() {
     setLoading(true);
 
     try {
-      await createProfile(currentUser.id, formData, photoFile);
-      alert('¡Perfil creado exitosamente! 💙');
-      window.location.reload();
+      // Generar un ID único para el usuario basado en el nombre
+      const userId = formData.displayName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Quitar acentos
+        .replace(/[^a-z0-9]/g, '-') // Reemplazar caracteres especiales con guiones
+        .replace(/-+/g, '-') // Eliminar guiones múltiples
+        .replace(/^-|-$/g, '') // Eliminar guiones al inicio y final
+        + '-' + Date.now(); // Agregar timestamp para garantizar unicidad
+
+      let photoURL = '';
+
+      // Subir foto si existe
+      if (photoFile) {
+        const photoRef = ref(storage, `profiles/${userId}`);
+        await uploadBytes(photoRef, photoFile);
+        photoURL = await getDownloadURL(photoRef);
+      }
+
+      // Crear documento en Firestore
+      const userData = {
+        displayName: formData.displayName.trim(),
+        shortName: formData.shortName.trim() || formData.displayName.trim(),
+        role: formData.role.trim() || 'Familiar',
+        bio: formData.bio.trim(),
+        photoURL: photoURL,
+        createdAt: serverTimestamp()
+      };
+
+      await setDoc(doc(db, 'users', userId), userData);
+
+      console.log('Profile created successfully:', userId);
+
+      // Recargar lista de perfiles
+      await refreshProfiles();
+
+      // Login automático con el nuevo perfil
+      await login(userId);
+
+      alert('¡Perfil creado exitosamente! 🎉');
     } catch (error) {
       console.error('Error creating profile:', error);
-      alert('Error al crear perfil. Intenta de nuevo.');
+      alert('Error al crear el perfil. Intenta de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleBack = () => {
-    if (confirm('¿Volver al login sin crear perfil?')) {
-      logout();
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-6">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8 relative">
-        {/* Botón Volver */}
-        <button
-          onClick={handleBack}
-          className="absolute top-4 left-4 text-gray-600 hover:text-gray-800 flex items-center gap-2 transition"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Volver
-        </button>
-
-        <div className="text-center mb-8 mt-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            ¡Bienvenido! 👋
+      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Crear mi perfil 👋
           </h1>
           <p className="text-gray-600">
-            Completa tu perfil para empezar a publicar para Joaquín
+            Completa tu información para unirte al espacio de Joaquín
           </p>
         </div>
 
@@ -79,28 +99,28 @@ export default function ProfileSetup() {
           {/* Nombre completo */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre completo *
+              Nombre completo * <span className="text-gray-500">(ej: Carlos Jerez)</span>
             </label>
             <input
               type="text"
               value={formData.displayName}
               onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-              placeholder="Ej: Carlos Jerez"
+              placeholder="Escribe tu nombre completo"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
               required
             />
           </div>
 
-          {/* Nombre corto */}
+          {/* Nombre corto (cómo quiere aparecer) */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cómo aparecerás
+              Cómo quieres aparecer <span className="text-gray-500">(ej: Papá, Hermano Mayor, Tía María)</span>
             </label>
             <input
               type="text"
               value={formData.shortName}
               onChange={(e) => setFormData({ ...formData, shortName: e.target.value })}
-              placeholder="Ej: Papá"
+              placeholder="Opcional - Si no lo llenas, usaremos tu nombre completo"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
             />
           </div>
@@ -108,13 +128,13 @@ export default function ProfileSetup() {
           {/* Relación con Joaquín */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tu relación con Joaquín
+              Tu relación con Joaquín <span className="text-gray-500">(ej: Padre, Hermano, Tío, Abuelo)</span>
             </label>
             <input
               type="text"
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              placeholder="Ej: Padre, Hermano mayor, Abuela"
+              placeholder="Opcional"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
             />
           </div>
@@ -133,14 +153,24 @@ export default function ProfileSetup() {
             />
           </div>
 
-          {/* Botón submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-xl hover:shadow-xl transition disabled:opacity-50"
-          >
-            {loading ? '⏳ Creando perfil...' : '✨ Crear mi perfil'}
-          </button>
+          {/* Botones */}
+          <div className="flex gap-4">
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className="flex-1 py-4 bg-gray-200 text-gray-700 text-lg font-semibold rounded-xl hover:bg-gray-300 transition disabled:opacity-50"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-xl hover:shadow-xl transition disabled:opacity-50"
+            >
+              {loading ? '⏳ Creando perfil...' : '✨ Crear mi perfil'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

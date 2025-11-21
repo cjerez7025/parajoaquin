@@ -19,6 +19,7 @@ export default function Header() {
                   alt={userProfile.displayName}
                   className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-lg cursor-pointer hover:scale-105 transition"
                   onClick={() => setShowEditProfile(true)}
+                  title="Click para editar perfil"
                 />
               ) : (
                 <span className="text-4xl">{currentUser.avatar}</span>
@@ -28,6 +29,11 @@ export default function Header() {
                 <div className="text-xl font-semibold">
                   Hola, {userProfile?.displayName || currentUser.name}
                 </div>
+                {userProfile?.role && (
+                  <div className="text-sm text-gray-300 mb-1">
+                    {userProfile.role}
+                  </div>
+                )}
                 <button
                   onClick={() => setShowEditProfile(true)}
                   className="text-sm text-gray-300 hover:text-white transition"
