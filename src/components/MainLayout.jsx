@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from './Sidebar';
 import Tabs from './Tabs';
 
 export default function MainLayout({ children }) {
   const { currentUser, userProfile, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('timeline');
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -56,12 +58,12 @@ export default function MainLayout({ children }) {
               ? '💙 Mensajes para ti' 
               : 'Comparte tus momentos'}
           </h1>
-          <Tabs />
+          <Tabs activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto bg-gray-50 p-8">
-          {children}
+          {children({ activeTab })}
         </div>
       </div>
     </div>

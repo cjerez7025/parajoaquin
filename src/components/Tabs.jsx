@@ -1,8 +1,4 @@
-import { useState } from 'react';
-
-export default function Tabs() {
-  const [activeTab, setActiveTab] = useState('timeline');
-
+export default function Tabs({ activeTab, onTabChange }) {
   const tabs = [
     { id: 'timeline', label: '📝 Timeline', icon: '📝' },
     { id: 'gallery', label: '📸 Galería', icon: '📸' },
@@ -15,14 +11,12 @@ export default function Tabs() {
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
+          onClick={() => onTabChange(tab.id)}
           className={`tab ${activeTab === tab.id ? 'active' : ''}`}
         >
           {tab.label}
         </button>
       ))}
-
-
     </div>
   );
 }
