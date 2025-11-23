@@ -43,21 +43,23 @@ export default function Sidebar() {
 
       {/* Perfiles de la familia */}
       <div className="p-5 space-y-4">
-        {/* Perfil de Joaquín - especial */}
-        <div 
-          onClick={() => handleProfileClick('joaquin')}
-          className={`profile-card ${currentUser?.id === 'joaquin' ? 'active' : ''}`}
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 flex items-center justify-center text-2xl flex-shrink-0">
-              💙
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-base truncate">Joaquín</h3>
-              <p className="text-xs text-white/80 truncate">Ver mensajes</p>
-            </div>
-          </div>
-        </div>
+{/* Perfil de Joaquín - especial con animación de fútbol */}
+<div 
+  onClick={() => handleProfileClick('joaquin')}
+  className={`profile-card joaquin-card ${currentUser?.id === 'joaquin' ? 'active' : ''}`}
+>
+  <div className="flex items-center gap-3 mb-2">
+    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-2xl flex-shrink-0 relative overflow-hidden">
+      {/* Balón de fútbol animado */}
+      <span className="soccer-ball">⚽</span>
+      <span className="heart-overlay">💙</span>
+    </div>
+    <div className="flex-1 min-w-0">
+      <h3 className="font-semibold text-base truncate">Joaquín</h3>
+      <p className="text-xs text-white/80 truncate">Ver mensajes ⚽</p>
+    </div>
+  </div>
+</div>
 
         {/* Otros perfiles */}
         {allProfiles.map((profile) => {
