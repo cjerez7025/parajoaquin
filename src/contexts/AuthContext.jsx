@@ -23,27 +23,53 @@ export const AuthProvider = ({ children }) => {
     loadUserFromStorage();
   }, []);
 
-  const loadAllProfiles = async () => {
-    try {
-      console.log('Loading all profiles...');
-      const querySnapshot = await getDocs(collection(db, 'users'));
-      const profiles = [];
-      
-      querySnapshot.forEach((doc) => {
-        profiles.push({
-          id: doc.id,
-          ...doc.data()
-        });
+const loadAllProfiles = async () => {
+  try {
+    console.log('Loading all profiles...');
+    
+    // Cargar perfiles
+    const usersSnapshot = await getDocs(collection(db, 'users'));
+    const profiles = [];
+    
+    usersSnapshot.forEach((doc) => {
+      profiles.push({
+        id: doc.id,
+        ...doc.data(),
+        postCount: 0,
+        photoCount: 0
       });
+    });
+    
+    // Cargar posts para contar
+    const postsSnapshot = await getDocs(collection(db, 'posts'));
+    
+    // Contar posts y fotos por autor
+    postsSnapshot.forEach((doc) => {
+      const postData = doc.data();
+      const authorId = postData.authorId;
       
-      console.log('Profiles loaded:', profiles);
-      setAllProfiles(profiles);
-    } catch (error) {
-      console.error('Error loading profiles:', error);
-    } finally {
-      setProfilesLoading(false);
-    }
-  };
+      // Encontrar el perfil del autor
+      const profile = profiles.find(p => p.id === authorId);
+      
+      if (profile) {
+        // Incrementar contador de posts
+        profile.postCount++;
+        
+        // Si tiene imagen o video, incrementar contador de fotos
+        if (postData.imageURL || postData.videoURL) {
+          profile.photoCount++;
+        }
+      }
+    });
+    
+    console.log('Profiles loaded with counts:', profiles);
+    setAllProfiles(profiles);
+  } catch (error) {
+    console.error('Error loading profiles:', error);
+  } finally {
+    setProfilesLoading(false);
+  }
+};
 
   const loadUserFromStorage = async () => {
     try {

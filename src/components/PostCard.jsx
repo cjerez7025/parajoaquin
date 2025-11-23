@@ -1,15 +1,93 @@
-export default function PostCard({ post }) {
+import { useState } from 'react';
+import { doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { useAuth } from '../contexts/AuthContext';
+
+export default function PostCard({ post, onUpdate }) {
+  const { currentUser, allProfiles } = useAuth();
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+
+  // Buscar el perfil del autor
+  const authorProfile = allProfiles.find(p => p.id === post.authorId);
+
+  const isLiked = post.likes?.includes(currentUser?.id);
+  const likesCount = post.likes?.length || 0;
+  const commentsCount = post.comments?.length || 0;
+
+  const handleLike = async () => {
+    try {
+      const postRef = doc(db, 'posts', post.id);
+      
+      if (isLiked) {
+        await updateDoc(postRef, {
+          likes: arrayRemove(currentUser.id)
+        });
+      } else {
+        await updateDoc(postRef, {
+          likes: arrayUnion(currentUser.id)
+        });
+      }
+      
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error updating like:', error);
+    }
+  };
+
+  const handleAddComment = async (e) => {
+    e.preventDefault();
+    
+    if (!newComment.trim()) return;
+
+    try {
+      const postRef = doc(db, 'posts', post.id);
+      
+      const comment = {
+        id: Date.now().toString(),
+        authorId: currentUser.id,
+        authorName: currentUser.name,
+        text: newComment.trim(),
+        timestamp: new Date().toISOString()
+      };
+
+      await updateDoc(postRef, {
+        comments: arrayUnion(comment)
+      });
+
+      setNewComment('');
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('¿Estás seguro de eliminar esta publicación?')) return;
+
+    try {
+      await deleteDoc(doc(db, 'posts', post.id));
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      alert('Error al eliminar la publicación');
+    }
+  };
+
   const formatDate = (timestamp) => {
-    if (!timestamp) return 'Ahora';
-    const date = timestamp.toDate();
+    if (!timestamp) return '';
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     const now = new Date();
     const diff = now - date;
     const hours = Math.floor(diff / (1000 * 60 * 60));
-    
+    const days = Math.floor(hours / 24);
+
     if (hours < 1) return 'Hace unos minutos';
     if (hours < 24) return `Hace ${hours} hora${hours > 1 ? 's' : ''}`;
+    if (days < 7) return `Hace ${days} día${days > 1 ? 's' : ''}`;
     
-    return date.toLocaleDateString('es-CL', { 
+    return date.toLocaleDateString('es-ES', { 
       day: 'numeric', 
       month: 'long', 
       year: 'numeric' 
@@ -17,27 +95,144 @@ export default function PostCard({ post }) {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg border-l-4 border-blue-500 hover:shadow-xl transition">
-      <div className="flex items-center gap-3 mb-4">
-        {/* Foto de perfil o emoji */}
-        {post.authorPhotoURL ? (
-          <img 
-            src={post.authorPhotoURL} 
-            alt={post.authorName}
-            className="w-12 h-12 rounded-full object-cover border-2 border-blue-500 shadow"
-          />
-        ) : (
-          <span className="text-4xl">{post.authorAvatar}</span>
-        )}
-        
-        <div>
-          <div className="font-bold text-gray-800">{post.authorName}</div>
-          <div className="text-sm text-gray-500">{formatDate(post.timestamp)}</div>
+    <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 mb-5">
+      {/* Header del Post */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex items-center gap-3">
+          {authorProfile?.photoURL ? (
+            <img 
+              src={authorProfile.photoURL}
+              alt={post.authorName}
+              className="w-12 h-12 rounded-full object-cover border-2 border-indigo-200"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xl">
+              {post.authorName[0]}
+            </div>
+          )}
+          
+          <div>
+            <h4 className="font-semibold text-gray-800">{post.authorName}</h4>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span>{formatDate(post.createdAt)}</span>
+              {authorProfile?.role && (
+                <>
+                  <span>•</span>
+                  <span>{authorProfile.role}</span>
+                </>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Botón eliminar si es el autor */}
+        {currentUser?.id === post.authorId && (
+          <button
+            onClick={handleDelete}
+            className="text-gray-400 hover:text-red-500 transition-colors"
+            title="Eliminar publicación"
+          >
+            🗑️
+          </button>
+        )}
       </div>
-      
-      <h3 className="text-xl font-bold text-gray-800 mb-2">{post.title}</h3>
-      <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
+
+      {/* Contenido del Post */}
+      <div className="mb-4">
+        {post.title && (
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{post.title}</h3>
+        )}
+        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+      </div>
+
+      {/* Imagen si existe */}
+      {post.imageURL && (
+        <div className="mb-4 rounded-xl overflow-hidden">
+          <img 
+            src={post.imageURL} 
+            alt="Post" 
+            className="w-full max-h-96 object-cover"
+          />
+        </div>
+      )}
+
+      {/* Video si existe */}
+      {post.videoURL && (
+        <div className="mb-4 rounded-xl overflow-hidden">
+          <video 
+            src={post.videoURL} 
+            controls 
+            className="w-full max-h-96"
+          />
+        </div>
+      )}
+
+      {/* Acciones del Post */}
+      <div className="border-t border-gray-100 pt-4">
+        <div className="flex gap-4 mb-4">
+          <button
+            onClick={handleLike}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${
+              isLiked 
+                ? 'bg-red-50 text-red-500' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <span className="text-lg">{isLiked ? '❤️' : '🤍'}</span>
+            <span className="font-medium">{likesCount}</span>
+          </button>
+
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300"
+          >
+            <span className="text-lg">💬</span>
+            <span className="font-medium">{commentsCount}</span>
+          </button>
+        </div>
+
+        {/* Sección de Comentarios */}
+        {showComments && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            {/* Comentarios existentes */}
+            {post.comments && post.comments.length > 0 && (
+              <div className="space-y-3 mb-4">
+                {post.comments.map((comment) => (
+                  <div key={comment.id} className="bg-gray-50 rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm text-gray-800">
+                        {comment.authorName}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {formatDate(comment.timestamp)}
+                      </span>
+                    </div>
+                    <p className="text-gray-700 text-sm">{comment.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario de nuevo comentario */}
+            <form onSubmit={handleAddComment} className="flex gap-2">
+              <input
+                type="text"
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Escribe un comentario..."
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                type="submit"
+                disabled={!newComment.trim()}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                Enviar
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

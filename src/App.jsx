@@ -1,86 +1,54 @@
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
-import ProfileSetup from './components/ProfileSetup';
-import Header from './components/Header';
+import MainLayout from './components/MainLayout';
 import PostForm from './components/PostForm';
 import Timeline from './components/Timeline';
 import WhatsAppButton from './components/WhatsAppButton';
 
 function AppContent() {
-  const { currentUser, userProfile, loading } = useAuth();
+  const { currentUser, loading } = useAuth();
 
-  console.log('App state:', { currentUser, userProfile, loading });
-
-  // Mostrar loading mientras verifica
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
+          <div className="text-5xl mb-4">⏳</div>
           <div className="text-xl text-gray-600">Cargando...</div>
         </div>
       </div>
     );
   }
 
-  // Si no hay usuario logueado → Login
   if (!currentUser) {
     return <Login />;
   }
 
-  // 🎯 JOAQUÍN: Acceso directo solo para ver contenido (sin perfil necesario)
+  // Si es Joaquín, solo mostrar timeline (sin formulario para publicar)
   if (currentUser.id === 'joaquin') {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
-          {/* Banner especial para Joaquín */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-6 text-center shadow-xl">
-            <div className="text-4xl mb-2">💙</div>
-            <h2 className="text-2xl font-bold text-white mb-2">
-              ¡Bienvenido, Joaquín!
-            </h2>
-            <p className="text-white/90">
-              Aquí está todo el amor que tu familia tiene para ti
-            </p>
-          </div>
-
-          {/* Timeline solo lectura */}
-          <Timeline />
+      <MainLayout>
+        <div className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg">
+          <div className="text-5xl mb-3">💙</div>
+          <h2 className="text-3xl font-bold mb-2">¡Bienvenido, Joaquín!</h2>
+          <p className="text-lg text-white/90">
+            Aquí está todo el amor que tu familia tiene para ti
+          </p>
         </div>
+        <Timeline />
         <WhatsAppButton />
-      </div>
+      </MainLayout>
     );
   }
 
-  // Para el resto de la familia: verificar perfil
-  // Si hay usuario pero aún está cargando el perfil → Esperar
-  if (currentUser && userProfile === undefined) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <div className="text-xl text-gray-600">Cargando perfil...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // Si hay usuario pero perfil es explícitamente null → ProfileSetup
-  if (currentUser && userProfile === null) {
-    return <ProfileSetup />;
-  }
-
-  // Si tiene usuario Y perfil → App normal con capacidad de publicar
+  // Para el resto de la familia: mostrar formulario + timeline
   return (
-    <div className="min-h-screen bg-gray-100">
-      <Header />
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
+    <MainLayout>
+      <div className="max-w-3xl mx-auto space-y-6">
         <PostForm />
         <Timeline />
       </div>
       <WhatsAppButton />
-    </div>
+    </MainLayout>
   );
 }
 

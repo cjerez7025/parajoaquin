@@ -6,3 +6,39 @@ body {
   margin: 0;
   font-family: Georgia, serif;
 }
+/* Estilos para Sidebar */
+.profile-card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.profile-card:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateX(5px);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-card.active {
+  background: white;
+  color: #667eea;
+  border-color: #ffd700;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+
+.profile-card.active:hover {
+  transform: none;
+}
+
+.profile-card.active .text-white\/80 {
+  color: #888 !important;
+}
+
+.profile-card.active .text-white\/70 {
+  color: #999 !important;
+}
