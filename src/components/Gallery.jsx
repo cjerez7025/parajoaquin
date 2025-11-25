@@ -151,161 +151,142 @@ export default function Gallery() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Filtros */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          {/* Filtro por autor */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Filtrar por familiar:
-            </label>
-            <select
-              value={selectedAuthor}
-              onChange={(e) => setSelectedAuthor(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500"
-            >
-              <option value="all">Todos</option>
-              {allProfiles.map(profile => (
-                <option key={profile.id} value={profile.id}>
-                  {profile.shortName || profile.displayName}
-                </option>
-              ))}
-            </select>
-          </div>
+   {/* Filtros - Responsive */}
+<div className="bg-white rounded-2xl p-4 lg:p-6 shadow-sm mb-6">
+  <div className="flex flex-col lg:flex-row lg:flex-wrap gap-4 lg:items-center">
+    {/* Filtro por autor */}
+    <div className="flex-1 min-w-[200px]">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Filtrar por familiar:
+      </label>
+      <select
+        value={selectedAuthor}
+        onChange={(e) => setSelectedAuthor(e.target.value)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-indigo-500 text-sm lg:text-base"
+      >
+        <option value="all">Todos</option>
+        {allProfiles.map(profile => (
+          <option key={profile.id} value={profile.id}>
+            {profile.shortName || profile.displayName}
+          </option>
+        ))}
+      </select>
+    </div>
 
-          {/* Filtro por tipo */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de archivo:
-            </label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setSelectedType('all')}
-                className={`px-4 py-2 rounded-lg transition ${
-                  selectedType === 'all'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Todos
-              </button>
-              <button
-                onClick={() => setSelectedType('images')}
-                className={`px-4 py-2 rounded-lg transition ${
-                  selectedType === 'images'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                📷 Fotos
-              </button>
-              <button
-                onClick={() => setSelectedType('videos')}
-                className={`px-4 py-2 rounded-lg transition ${
-                  selectedType === 'videos'
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                🎥 Videos
-              </button>
-            </div>
-          </div>
-
-          {/* Contador */}
-          <div className="ml-auto text-right">
-            <div className="text-sm text-gray-500">Total:</div>
-            <div className="text-2xl font-bold text-indigo-600">
-              {filteredItems.length}
-            </div>
-          </div>
-        </div>
+    {/* Filtro por tipo */}
+    <div className="flex-1">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        Tipo de archivo:
+      </label>
+      <div className="flex gap-2">
+        <button
+          onClick={() => setSelectedType('all')}
+          className={`flex-1 px-3 py-2 rounded-lg transition text-sm lg:text-base ${
+            selectedType === 'all'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          Todos
+        </button>
+        <button
+          onClick={() => setSelectedType('images')}
+          className={`flex-1 px-3 py-2 rounded-lg transition text-sm lg:text-base ${
+            selectedType === 'images'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          📷
+        </button>
+        <button
+          onClick={() => setSelectedType('videos')}
+          className={`flex-1 px-3 py-2 rounded-lg transition text-sm lg:text-base ${
+            selectedType === 'videos'
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          }`}
+        >
+          🎥
+        </button>
       </div>
+    </div>
 
-      {/* Grid de medios */}
-      {filteredItems.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="text-6xl mb-4">📸</div>
-          <h3 className="text-2xl font-semibold text-gray-800 mb-2">
-            No hay archivos multimedia
-          </h3>
-          <p className="text-gray-600">
-            {selectedAuthor !== 'all' || selectedType !== 'all'
-              ? 'Intenta cambiar los filtros'
-              : 'Sube fotos o videos en tus publicaciones'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredItems.map((item, index) => {
-            const authorProfile = getAuthorProfile(item.authorId);
-            
-            return (
-              <div
-                key={`${item.postId}-${index}`}
-                className="relative group cursor-pointer overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300"
-                onClick={() => openLightbox(item, index)}
-              >
-                {item.type.startsWith('image/') ? (
-                  <img
-                    src={item.url}
-                    alt={item.title || 'Imagen'}
-                    className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="relative">
-                    <video
-                      src={item.url}
-                      className="w-full h-64 object-cover"
-                      muted
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <span className="text-5xl">▶️</span>
-                    </div>
-                  </div>
-                )}
+    {/* Contador */}
+    <div className="text-center lg:ml-auto">
+      <div className="text-xs lg:text-sm text-gray-500">Total:</div>
+      <div className="text-xl lg:text-2xl font-bold text-indigo-600">
+        {filteredItems.length}
+      </div>
+    </div>
+  </div>
+</div>
 
-                {/* Overlay con info */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      {authorProfile?.photoURL ? (
-                        <img
-                          src={authorProfile.photoURL}
-                          alt={item.authorName}
-                          className="w-8 h-8 rounded-full border-2 border-white"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-white/30 flex items-center justify-center text-white text-sm">
-                          {item.authorName[0]}
-                        </div>
-                      )}
-                      <div>
-                        <div className="text-white font-semibold text-sm">
-                          {item.authorName}
-                        </div>
-                        <div className="text-white/80 text-xs">
-                          {formatDate(item.timestamp)}
-                        </div>
-                      </div>
-                    </div>
-                    {item.title && (
-                      <div className="text-white text-sm font-medium truncate">
-                        {item.title}
-                      </div>
-                    )}
-                  </div>
+    {/* Grid de medios - Responsive */}
+<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 lg:gap-4">
+  {filteredItems.map((item, index) => {
+    const authorProfile = getAuthorProfile(item.authorId);
+    
+    return (
+      <div
+        key={`${item.postId}-${index}`}
+        className="relative group cursor-pointer overflow-hidden rounded-lg lg:rounded-xl shadow-sm hover:shadow-lg transition-all duration-300"
+        onClick={() => openLightbox(item, index)}
+      >
+        {item.type.startsWith('image/') ? (
+          <img
+            src={item.url}
+            alt={item.title || 'Imagen'}
+            className="w-full h-48 lg:h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+          />
+        ) : (
+          <div className="relative">
+            <video
+              src={item.url}
+              className="w-full h-48 lg:h-64 object-cover"
+              muted
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <span className="text-3xl lg:text-5xl">▶️</span>
+            </div>
+          </div>
+        )}
+
+        {/* Overlay con info - solo visible en hover en desktop */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute bottom-0 left-0 right-0 p-2 lg:p-4">
+            <div className="flex items-center gap-2 mb-1 lg:mb-2">
+              {authorProfile?.photoURL ? (
+                <img
+                  src={authorProfile.photoURL}
+                  alt={item.authorName}
+                  className="w-6 h-6 lg:w-8 lg:h-8 rounded-full border-2 border-white"
+                />
+              ) : (
+                <div className="w-6 h-6 lg:w-8 lg:h-8 rounded-full bg-white/30 flex items-center justify-center text-white text-xs">
+                  {item.authorName[0]}
                 </div>
-
-                {/* Badge del tipo */}
-                <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                  {item.type.startsWith('image/') ? '📷' : '🎥'}
+              )}
+              <div>
+                <div className="text-white font-semibold text-xs lg:text-sm">
+                  {item.authorName}
+                </div>
+                <div className="text-white/80 text-[10px] lg:text-xs hidden lg:block">
+                  {formatDate(item.timestamp)}
                 </div>
               </div>
-            );
-          })}
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Badge del tipo */}
+        <div className="absolute top-1 right-1 lg:top-2 lg:right-2 bg-black/50 text-white text-[10px] lg:text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 rounded">
+          {item.type.startsWith('image/') ? '📷' : '🎥'}
+        </div>
+      </div>
+    );
+  })}
+</div>
 
       {/* Lightbox */}
       {lightbox && (

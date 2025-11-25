@@ -118,30 +118,30 @@ export default function PostCard({ post, onUpdate }) {
 
   return (
     <>
-      <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 mb-5">
+      <div className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-4 lg:p-6 mb-4 lg:mb-5">
         {/* Header del Post */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             {authorProfile?.photoURL ? (
               <img 
                 src={authorProfile.photoURL}
                 alt={post.authorName}
-                className="w-12 h-12 rounded-full object-cover border-2 border-indigo-200"
+                className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover border-2 border-indigo-200"
               />
             ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xl">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-base lg:text-xl">
                 {post.authorName[0]}
               </div>
             )}
             
             <div>
-              <h4 className="font-semibold text-gray-800">{post.authorName}</h4>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <h4 className="font-semibold text-sm lg:text-base text-gray-800">{post.authorName}</h4>
+              <div className="flex items-center gap-1 lg:gap-2 text-xs lg:text-sm text-gray-500">
                 <span>{formatDate(post.timestamp)}</span>
                 {authorProfile?.role && (
                   <>
                     <span>•</span>
-                    <span>{authorProfile.role}</span>
+                    <span className="hidden sm:inline">{authorProfile.role}</span>
                   </>
                 )}
               </div>
@@ -152,7 +152,7 @@ export default function PostCard({ post, onUpdate }) {
           {currentUser?.id === post.authorId && (
             <button
               onClick={handleDelete}
-              className="text-gray-400 hover:text-red-500 transition-colors"
+              className="text-gray-400 hover:text-red-500 transition-colors text-lg lg:text-xl"
               title="Eliminar publicación"
             >
               🗑️
@@ -163,17 +163,17 @@ export default function PostCard({ post, onUpdate }) {
         {/* Contenido del Post */}
         <div className="mb-4">
           {post.title && (
-            <h3 className="text-xl font-bold text-gray-800 mb-2">{post.title}</h3>
+            <h3 className="text-lg lg:text-xl font-bold text-gray-800 mb-2">{post.title}</h3>
           )}
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+          <p className="text-sm lg:text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{post.content}</p>
         </div>
 
         {/* Galería de medios */}
         {mediaFiles.length > 0 && (
           <div className={`mb-4 ${
             mediaFiles.length === 1 ? '' : 
-            mediaFiles.length === 2 ? 'grid grid-cols-2 gap-2' :
-            mediaFiles.length === 3 ? 'grid grid-cols-3 gap-2' :
+            mediaFiles.length === 2 ? 'grid grid-cols-1 sm:grid-cols-2 gap-2' :
+            mediaFiles.length === 3 ? 'grid grid-cols-2 sm:grid-cols-3 gap-2' :
             'grid grid-cols-2 gap-2'
           }`}>
             {mediaFiles.map((media, index) => (
@@ -184,10 +184,10 @@ export default function PostCard({ post, onUpdate }) {
                       src={media.url} 
                       alt={`Media ${index + 1}`}
                       onClick={() => setLightboxImage(media.url)}
-                      className="w-full h-64 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
+                      className="w-full h-48 lg:h-64 object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                      <span className="text-white text-4xl opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white text-3xl lg:text-4xl opacity-0 group-hover:opacity-100 transition-opacity">
                         🔍
                       </span>
                     </div>
@@ -196,7 +196,7 @@ export default function PostCard({ post, onUpdate }) {
                   <video 
                     src={media.url}
                     controls 
-                    className="w-full h-64 object-cover rounded-xl"
+                    className="w-full h-48 lg:h-64 object-cover rounded-xl"
                   />
                 )}
                 {/* Contador si hay múltiples archivos */}
@@ -211,46 +211,46 @@ export default function PostCard({ post, onUpdate }) {
         )}
 
         {/* Acciones del Post */}
-        <div className="border-t border-gray-100 pt-4">
-          <div className="flex gap-4 mb-4">
+        <div className="border-t border-gray-100 pt-3 lg:pt-4">
+          <div className="flex gap-2 lg:gap-4 mb-3 lg:mb-4">
             <button
               onClick={handleLike}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-300 ${
+              className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-4 py-2 rounded-full transition-all duration-300 text-sm lg:text-base ${
                 isLiked 
                   ? 'bg-red-50 text-red-500' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <span className="text-lg">{isLiked ? '❤️' : '🤍'}</span>
+              <span className="text-base lg:text-lg">{isLiked ? '❤️' : '🤍'}</span>
               <span className="font-medium">{likesCount}</span>
             </button>
 
             <button
               onClick={() => setShowComments(!showComments)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300"
+              className="flex items-center gap-1 lg:gap-2 px-3 lg:px-4 py-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all duration-300 text-sm lg:text-base"
             >
-              <span className="text-lg">💬</span>
+              <span className="text-base lg:text-lg">💬</span>
               <span className="font-medium">{commentsCount}</span>
             </button>
           </div>
 
           {/* Sección de Comentarios */}
           {showComments && (
-            <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="mt-3 lg:mt-4 pt-3 lg:pt-4 border-t border-gray-100">
               {/* Comentarios existentes */}
               {post.comments && post.comments.length > 0 && (
-                <div className="space-y-3 mb-4">
+                <div className="space-y-2 lg:space-y-3 mb-3 lg:mb-4">
                   {post.comments.map((comment) => (
-                    <div key={comment.id} className="bg-gray-50 rounded-lg p-3">
+                    <div key={comment.id} className="bg-gray-50 rounded-lg p-2 lg:p-3">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-sm text-gray-800">
+                        <span className="font-semibold text-xs lg:text-sm text-gray-800">
                           {comment.authorName}
                         </span>
                         <span className="text-xs text-gray-500">
                           {formatDate(comment.timestamp)}
                         </span>
                       </div>
-                      <p className="text-gray-700 text-sm">{comment.text}</p>
+                      <p className="text-gray-700 text-xs lg:text-sm">{comment.text}</p>
                     </div>
                   ))}
                 </div>
@@ -263,12 +263,12 @@ export default function PostCard({ post, onUpdate }) {
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Escribe un comentario..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-indigo-500"
+                  className="flex-1 px-3 lg:px-4 py-2 text-sm lg:text-base border border-gray-300 rounded-full focus:outline-none focus:border-indigo-500"
                 />
                 <button
                   type="submit"
                   disabled={!newComment.trim()}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+                  className="px-4 lg:px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm lg:text-base"
                 >
                   Enviar
                 </button>
@@ -286,14 +286,14 @@ export default function PostCard({ post, onUpdate }) {
         >
           <button
             onClick={() => setLightboxImage(null)}
-            className="absolute top-4 right-4 text-white text-4xl hover:text-gray-300"
+            className="absolute top-2 right-2 lg:top-4 lg:right-4 text-white text-3xl lg:text-4xl hover:text-gray-300"
           >
             ✕
           </button>
           <img 
             src={lightboxImage}
             alt="Vista ampliada"
-            className="max-w-full max-h-full object-contain"
+            className="max-w-full max-h-[85vh] lg:max-h-full object-contain"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

@@ -235,3 +235,157 @@ body {
 .confetti:nth-child(7) { left: 70%; animation-delay: 0.8s; background: #6366f1; }
 .confetti:nth-child(8) { left: 80%; animation-delay: 1.3s; background: #14b8a6; }
 .confetti:nth-child(9) { left: 90%; animation-delay: 1.8s; background: #f97316; }
+
+/* ============================================
+   RESPONSIVE - MÓVIL
+   ============================================ */
+
+/* Ajustes generales para móvil */
+@media (max-width: 1024px) {
+  /* Ocultar sidebar en móvil */
+  .sidebar {
+    display: none;
+  }
+
+  /* Tabs responsive */
+  .tab {
+    font-size: 0.85rem;
+    padding: 8px 16px;
+  }
+
+  /* Posts más compactos */
+  .bg-white.rounded-2xl {
+    border-radius: 15px;
+  }
+
+  /* Galería en móvil */
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Tabs más pequeños en móvil */
+  .tab {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+
+  /* Banner de Joaquín más compacto */
+  .joaquin-welcome {
+    padding: 1.5rem !important;
+  }
+
+  .joaquin-welcome h2 {
+    font-size: 1.5rem !important;
+  }
+
+  .joaquin-welcome p {
+    font-size: 0.95rem !important;
+  }
+
+  /* Lightbox móvil */
+  .fixed.inset-0 img,
+  .fixed.inset-0 video {
+    max-height: 70vh !important;
+  }
+
+  /* Formulario de post más compacto */
+  textarea {
+    font-size: 0.95rem;
+  }
+
+  /* Grid de preview de archivos */
+  .grid.grid-cols-2 {
+    gap: 0.5rem;
+  }
+}
+
+/* Mejoras táctiles para móvil */
+@media (hover: none) and (pointer: coarse) {
+  /* Botones más grandes para tocar */
+  button {
+    min-height: 44px;
+  }
+
+  /* Área de toque más grande */
+  .profile-card {
+    padding: 1rem;
+  }
+
+  /* Tabs más espaciados */
+  .tab {
+    min-height: 44px;
+  }
+
+  /* Botones de acción más grandes */
+  .action-btn {
+    min-height: 44px;
+    padding: 10px 16px;
+  }
+}
+
+/* Animaciones optimizadas para móvil */
+@media (max-width: 768px) {
+  /* Reducir animaciones en móvil para mejor performance */
+  .floating-soccer {
+    animation-duration: 12s !important;
+  }
+
+  .confetti {
+    animation-duration: 4s !important;
+  }
+
+  /* Simplificar hover effects en móvil */
+  .hover\:scale-105:hover {
+    transform: scale(1.02);
+  }
+
+  .hover\:scale-110:hover {
+    transform: scale(1.05);
+  }
+}
+
+/* Estilos específicos del menú móvil */
+.mobile-menu-enter {
+  transform: translateX(-100%);
+  animation: slide-in-left 0.3s ease-out forwards;
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Ajustes de scroll en móvil */
+@media (max-width: 768px) {
+  /* Scroll suave en móvil */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ocultar scrollbar en móvil */
+  .overflow-y-auto::-webkit-scrollbar {
+    display: none;
+  }
+
+  .overflow-y-auto {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Safe area para dispositivos con notch */
+@supports (padding: max(0px)) {
+  .top-bar {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .bottom-bar {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}

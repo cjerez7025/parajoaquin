@@ -19,49 +19,49 @@ export default function PostForm() {
     handleFiles(selectedFiles);
   };
 
- const handleFiles = (selectedFiles) => {
-  // Filtrar solo imágenes y videos
-  const validFiles = selectedFiles.filter(file => 
-    file.type.startsWith('image/') || file.type.startsWith('video/')
-  );
+  const handleFiles = (selectedFiles) => {
+    // Filtrar solo imágenes y videos
+    const validFiles = selectedFiles.filter(file => 
+      file.type.startsWith('image/') || file.type.startsWith('video/')
+    );
 
-  if (validFiles.length === 0) {
-    alert('Solo puedes subir imágenes o videos');
-    return;
-  }
+    if (validFiles.length === 0) {
+      alert('Solo puedes subir imágenes o videos');
+      return;
+    }
 
-  // Limitar a 5 archivos
-  if (files.length + validFiles.length > 5) {
-    alert('Máximo 5 archivos por publicación');
-    return;
-  }
+    // Limitar a 5 archivos
+    if (files.length + validFiles.length > 5) {
+      alert('Máximo 5 archivos por publicación');
+      return;
+    }
 
-  setFiles(prev => [...prev, ...validFiles]);
+    setFiles(prev => [...prev, ...validFiles]);
 
-  // Crear previews
-  validFiles.forEach(file => {
-    if (file.type.startsWith('image/')) {
-      // Para imágenes usar FileReader
-      const reader = new FileReader();
-      reader.onloadend = () => {
+    // Crear previews
+    validFiles.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        // Para imágenes usar FileReader
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviews(prev => [...prev, {
+            url: reader.result,
+            type: file.type,
+            name: file.name
+          }]);
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type.startsWith('video/')) {
+        // Para videos usar URL.createObjectURL (más rápido)
+        const videoURL = URL.createObjectURL(file);
         setPreviews(prev => [...prev, {
-          url: reader.result,
+          url: videoURL,
           type: file.type,
           name: file.name
         }]);
-      };
-      reader.readAsDataURL(file);
-    } else if (file.type.startsWith('video/')) {
-      // Para videos usar URL.createObjectURL (más rápido)
-      const videoURL = URL.createObjectURL(file);
-      setPreviews(prev => [...prev, {
-        url: videoURL,
-        type: file.type,
-        name: file.name
-      }]);
-    }
-  });
-};
+      }
+    });
+  };
 
   const removeFile = (index) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
@@ -100,8 +100,8 @@ export default function PostForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!content.trim()) {
-      alert('Por favor escribe un mensaje');
+    if (!content.trim() && files.length === 0) {
+      alert('Por favor escribe un mensaje o sube al menos una imagen/video');
       return;
     }
 
@@ -153,6 +153,14 @@ export default function PostForm() {
       // Limpiar formulario
       setTitle('');
       setContent('');
+
+      // Liberar URLs de objetos (importante para videos)
+      previews.forEach(preview => {
+        if (preview.url.startsWith('blob:')) {
+          URL.revokeObjectURL(preview.url);
+        }
+      });
+
       setFiles([]);
       setPreviews([]);
       
@@ -172,8 +180,8 @@ export default function PostForm() {
   const commonEmojis = ['❤️', '💙', '😊', '🎉', '🎂', '🎈', '⭐', '✨', '🌟', '💝', '🥰', '😍'];
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-lg">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">✨ Nueva Publicación</h2>
+    <div className="bg-white rounded-2xl p-4 lg:p-6 shadow-lg">
+      <h2 className="text-xl lg:text-2xl font-bold text-gray-800 mb-4">✨ Nueva Publicación</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Título */}
@@ -183,7 +191,7 @@ export default function PostForm() {
             placeholder="Título (opcional)..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition"
+            className="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-base border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition"
           />
         </div>
 
@@ -193,24 +201,24 @@ export default function PostForm() {
             placeholder="Escribe tu mensaje para Joaquín..."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            rows="6"
-            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none resize-none transition"
+            rows="4"
+            className="w-full px-3 py-2 lg:px-4 lg:py-3 text-sm lg:text-base border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none resize-none transition"
           />
           <div className="flex justify-between items-center mt-2 px-2">
-            <span className="text-sm text-gray-500">
+            <span className="text-xs lg:text-sm text-gray-500">
               {content.length} caracteres
             </span>
           </div>
         </div>
 
         {/* Emojis rápidos */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1 lg:gap-2">
           {commonEmojis.map(emoji => (
             <button
               key={emoji}
               type="button"
               onClick={() => addEmoji(emoji)}
-              className="text-2xl hover:scale-125 transition-transform"
+              className="text-xl lg:text-2xl hover:scale-125 transition-transform p-1"
               title="Agregar emoji"
             >
               {emoji}
@@ -224,17 +232,17 @@ export default function PostForm() {
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
-          className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+          className={`border-2 border-dashed rounded-xl p-6 lg:p-8 text-center cursor-pointer transition-all ${
             isDragging 
               ? 'border-blue-500 bg-blue-50' 
               : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
           }`}
         >
-          <div className="text-4xl mb-2">📸</div>
-          <p className="text-gray-600 font-medium">
+          <div className="text-3xl lg:text-4xl mb-2">📸</div>
+          <p className="text-sm lg:text-base text-gray-600 font-medium">
             Arrastra fotos o videos aquí
           </p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs lg:text-sm text-gray-500 mt-1">
             o haz clic para seleccionar (máximo 5 archivos)
           </p>
           <input
@@ -247,52 +255,52 @@ export default function PostForm() {
           />
         </div>
 
-{/* Previews de archivos */}
-{previews.length > 0 && (
-  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-    {previews.map((preview, index) => (
-      <div key={index} className="relative group">
-        {preview.type.startsWith('image/') ? (
-          <img 
-            src={preview.url} 
-            alt={`Preview ${index}`}
-            className="w-full h-32 object-cover rounded-lg"
-          />
-        ) : (
-          <div className="relative">
-            <video 
-              src={preview.url}
-              className="w-full h-32 object-cover rounded-lg"
-              muted
-            />
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
-              <span className="text-4xl">▶️</span>
-            </div>
+        {/* Previews de archivos */}
+        {previews.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 lg:gap-4">
+            {previews.map((preview, index) => (
+              <div key={index} className="relative group">
+                {preview.type.startsWith('image/') ? (
+                  <img 
+                    src={preview.url} 
+                    alt={`Preview ${index}`}
+                    className="w-full h-24 lg:h-32 object-cover rounded-lg"
+                  />
+                ) : (
+                  <div className="relative">
+                    <video 
+                      src={preview.url}
+                      className="w-full h-24 lg:h-32 object-cover rounded-lg"
+                      muted
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg">
+                      <span className="text-3xl lg:text-4xl">▶️</span>
+                    </div>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeFile(index)}
+                  className="absolute top-1 right-1 lg:top-2 lg:right-2 bg-red-500 text-white rounded-full w-6 h-6 lg:w-8 lg:h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600 text-sm lg:text-base"
+                >
+                  ✕
+                </button>
+                <div className="absolute bottom-1 left-1 lg:bottom-2 lg:left-2 bg-black/70 text-white text-xs px-2 py-1 rounded font-medium">
+                  {preview.type.startsWith('image/') ? '📷 Foto' : '🎥 Video'}
+                </div>
+                <div className="absolute top-1 left-1 lg:top-2 lg:left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                  {index + 1}
+                </div>
+              </div>
+            ))}
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => removeFile(index)}
-          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-        >
-          ✕
-        </button>
-        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded font-medium">
-          {preview.type.startsWith('image/') ? '📷 Foto' : '🎥 Video'}
-        </div>
-        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-          {index + 1}
-        </div>
-      </div>
-    ))}
-  </div>
-)}
 
         {/* Botón de enviar */}
         <button
           type="submit"
-          disabled={loading || !content.trim()}
-          className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-xl hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading || (!content.trim() && files.length === 0)}
+          className="w-full py-3 lg:py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-base lg:text-lg font-semibold rounded-xl hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? '⏳ Publicando...' : '💌 Publicar'}
         </button>
