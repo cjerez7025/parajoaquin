@@ -9,6 +9,7 @@ export default function ProfileEdit({ onClose }) {
   const { currentUser, userProfile, refreshProfile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     displayName: '',
     shortName: '',
@@ -32,11 +33,12 @@ export default function ProfileEdit({ onClose }) {
     e.preventDefault();
     
     if (!formData.displayName.trim()) {
-      alert('Por favor ingresa tu nombre completo');
+      setError('Por favor ingresa tu nombre completo');
       return;
     }
 
     setLoading(true);
+    setError('');
 
     try {
       console.log('Updating profile for:', currentUser.id);
@@ -52,6 +54,7 @@ export default function ProfileEdit({ onClose }) {
           try {
             const oldPhotoRef = ref(storage, `profiles/${currentUser.id}`);
             await deleteObject(oldPhotoRef);
+            console.log('Old photo deleted');
           } catch (error) {
             console.log('No previous photo to delete or error deleting:', error);
           }
@@ -78,15 +81,19 @@ export default function ProfileEdit({ onClose }) {
       
       await updateDoc(doc(db, 'users', currentUser.id), userData);
 
-     console.log('Profile updated successfully!');
+      console.log('Profile updated successfully!');
 
-alert('¡Perfil actualizado exitosamente! 🎉');
+      // Refrescar el perfil en el contexto
+      await refreshProfile();
 
-// Recargar la página para mostrar cambios
-window.location.reload();
+      alert('¡Perfil actualizado exitosamente! 🎉');
+
+      // Cerrar el modal
+      onClose();
+
     } catch (error) {
       console.error('Error updating profile:', error);
-      alert(`Error al actualizar el perfil: ${error.message}`);
+      setError(`Error al actualizar el perfil: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -106,6 +113,13 @@ window.location.reload();
             ✕
           </button>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-xl">
+            ⚠️ {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Foto de perfil */}
@@ -143,6 +157,9 @@ window.location.reload();
               placeholder="Ej: Papá, Tío Juan"
               className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Si lo dejas vacío, se usará tu nombre completo
+            </p>
           </div>
 
           {/* Relación con Joaquín */}

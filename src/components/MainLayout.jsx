@@ -4,7 +4,7 @@ import Sidebar from './Sidebar';
 import Tabs from './Tabs';
 import MobileMenu from './MobileMenu';
 
-export default function MainLayout({ children }) {
+export default function MainLayout({ children, onEditProfile }) {
   const { currentUser, userProfile, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('timeline');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -58,16 +58,39 @@ export default function MainLayout({ children }) {
                   <p className="text-xs lg:text-sm text-gray-300">{userProfile.role}</p>
                 )}
               </div>
+
+              {/* BOTÓN EDITAR PERFIL - Solo si NO es Joaquín */}
+              {currentUser?.id !== 'joaquin' && onEditProfile && (
+                <button
+                  onClick={onEditProfile}
+                  className="hidden sm:flex items-center gap-2 px-3 py-2 lg:px-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors ml-2"
+                >
+                  ✏️ <span className="hidden md:inline">Editar perfil</span>
+                </button>
+              )}
             </div>
 
-            {/* Logout Button */}
-            <button
-              onClick={logout}
-              className="px-3 py-2 lg:px-5 text-sm lg:text-base bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-300 font-medium"
-            >
-              <span className="hidden sm:inline">Cerrar Sesión</span>
-              <span className="sm:hidden">Salir</span>
-            </button>
+            {/* Botones de la derecha */}
+            <div className="flex items-center gap-2">
+              {/* Botón Editar - solo móvil */}
+              {currentUser?.id !== 'joaquin' && onEditProfile && (
+                <button
+                  onClick={onEditProfile}
+                  className="sm:hidden px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition-colors"
+                >
+                  ✏️
+                </button>
+              )}
+
+              {/* Logout Button */}
+              <button
+                onClick={logout}
+                className="px-3 py-2 lg:px-5 text-sm lg:text-base bg-white/20 hover:bg-white/30 rounded-lg transition-all duration-300 font-medium"
+              >
+                <span className="hidden sm:inline">Cerrar Sesión</span>
+                <span className="sm:hidden">Salir</span>
+              </button>
+            </div>
           </div>
         </div>
 

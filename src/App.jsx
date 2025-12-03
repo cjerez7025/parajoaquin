@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
 import MainLayout from './components/MainLayout';
@@ -5,9 +6,11 @@ import PostForm from './components/PostForm';
 import Timeline from './components/Timeline';
 import Gallery from './components/Gallery';
 import WhatsAppButton from './components/WhatsAppButton';
+import ProfileEdit from './components/ProfileEdit';
 
 function AppContent() {
   const { currentUser, loading } = useAuth();
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   if (loading) {
     return (
@@ -24,10 +27,17 @@ function AppContent() {
     return <Login />;
   }
 
+  // Si está editando perfil, mostrar el editor
+  if (isEditingProfile) {
+    return (
+      <ProfileEdit onClose={() => setIsEditingProfile(false)} />
+    );
+  }
+
   // Si es Joaquín, solo mostrar contenido (sin formulario para publicar)
   if (currentUser.id === 'joaquin') {
     return (
-      <MainLayout>
+      <MainLayout onEditProfile={() => setIsEditingProfile(true)}>
         {({ activeTab }) => (
           <>
             <div className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-center text-white shadow-lg">
@@ -67,7 +77,7 @@ function AppContent() {
 
   // Para el resto de la familia: mostrar formulario + contenido según pestaña
   return (
-    <MainLayout>
+    <MainLayout onEditProfile={() => setIsEditingProfile(true)}>
       {({ activeTab }) => (
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Formulario solo en Timeline */}
