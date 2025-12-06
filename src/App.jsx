@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AccessGate from './components/AccessGate';
 import Login from './components/Login';
 import MainLayout from './components/MainLayout';
 import PostForm from './components/PostForm';
@@ -119,7 +120,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <AccessGate>
+        <AppContent />
+      </AccessGate>
     </AuthProvider>
   );
 }
