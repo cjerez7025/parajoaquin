@@ -9,13 +9,27 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(undefined);
-  const [allProfiles, setAllProfiles] = useState([]); // 👈 NUEVO: Todos los perfiles
+  const [allProfiles, setAllProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profilesLoading, setProfilesLoading] = useState(true);
 
-  // Cargar todos los perfiles al inicio
+  // Cargar todos los perfiles al inicio Y cuando cambie la autenticación
   useEffect(() => {
-    loadAllProfiles();
+    const loadProfilesIfAuthenticated = async () => {
+      // Esperar un momento para que Firebase Auth se inicialice
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Verificar si hay usuario autenticado (aunque sea anónimo)
+      const hasToken = localStorage.getItem('familyAccessToken');
+      
+      if (hasToken) {
+        await loadAllProfiles();
+      } else {
+        setProfilesLoading(false);
+      }
+    };
+    
+    loadProfilesIfAuthenticated();
   }, []);
 
   // Cargar usuario guardado
@@ -23,53 +37,53 @@ export const AuthProvider = ({ children }) => {
     loadUserFromStorage();
   }, []);
 
-const loadAllProfiles = async () => {
-  try {
-    console.log('Loading all profiles...');
-    
-    // Cargar perfiles
-    const usersSnapshot = await getDocs(collection(db, 'users'));
-    const profiles = [];
-    
-    usersSnapshot.forEach((doc) => {
-      profiles.push({
-        id: doc.id,
-        ...doc.data(),
-        postCount: 0,
-        photoCount: 0
+  const loadAllProfiles = async () => {
+    try {
+      console.log('Loading all profiles...');
+      
+      // Cargar perfiles
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const profiles = [];
+      
+      usersSnapshot.forEach((doc) => {
+        profiles.push({
+          id: doc.id,
+          ...doc.data(),
+          postCount: 0,
+          photoCount: 0
+        });
       });
-    });
-    
-    // Cargar posts para contar
-    const postsSnapshot = await getDocs(collection(db, 'posts'));
-    
-    // Contar posts y fotos por autor
-    postsSnapshot.forEach((doc) => {
-      const postData = doc.data();
-      const authorId = postData.authorId;
       
-      // Encontrar el perfil del autor
-      const profile = profiles.find(p => p.id === authorId);
+      // Cargar posts para contar
+      const postsSnapshot = await getDocs(collection(db, 'posts'));
       
-      if (profile) {
-        // Incrementar contador de posts
-        profile.postCount++;
+      // Contar posts y fotos por autor
+      postsSnapshot.forEach((doc) => {
+        const postData = doc.data();
+        const authorId = postData.authorId;
         
-        // Si tiene imagen o video, incrementar contador de fotos
-        if (postData.imageURL || postData.videoURL) {
-          profile.photoCount++;
+        // Encontrar el perfil del autor
+        const profile = profiles.find(p => p.id === authorId);
+        
+        if (profile) {
+          // Incrementar contador de posts
+          profile.postCount++;
+          
+          // Si tiene imagen o video, incrementar contador de fotos
+          if (postData.imageURL || postData.videoURL) {
+            profile.photoCount++;
+          }
         }
-      }
-    });
-    
-    console.log('Profiles loaded with counts:', profiles);
-    setAllProfiles(profiles);
-  } catch (error) {
-    console.error('Error loading profiles:', error);
-  } finally {
-    setProfilesLoading(false);
-  }
-};
+      });
+      
+      console.log('Profiles loaded with counts:', profiles);
+      setAllProfiles(profiles);
+    } catch (error) {
+      console.error('Error loading profiles:', error);
+    } finally {
+      setProfilesLoading(false);
+    }
+  };
 
   const loadUserFromStorage = async () => {
     try {

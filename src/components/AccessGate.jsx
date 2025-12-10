@@ -5,10 +5,10 @@ import { auth } from '../firebase/config';
 
 export default function AccessGate({ children }) {
   const [code, setCode] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     checkExistingAccess();
@@ -20,7 +20,7 @@ export default function AccessGate({ children }) {
 
     if (token && expiry && Date.now() < parseInt(expiry)) {
       // Verificar con Cloud Function que el token sigue válido
-      const functions = getFunctions();
+      const functions = getFunctions(undefined, 'us-central1');
       const verifyToken = httpsCallable(functions, 'verifyAccessToken');
       
       try {
@@ -75,6 +75,7 @@ export default function AccessGate({ children }) {
         localStorage.setItem('familyAccessToken', result.data.accessToken);
         localStorage.setItem('familyAccessExpiry', result.data.expiresAt.toString());
 
+        // Dar acceso (esto mostrará el children, que incluye AuthProvider)
         setHasAccess(true);
       } else {
         setError('❌ Código incorrecto. Verifica e intenta de nuevo.');
@@ -83,8 +84,6 @@ export default function AccessGate({ children }) {
     } catch (error) {
       console.error('Error validating code:', error);
       console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
-      console.error('Error details:', error.details);
       
       if (error.code === 'functions/permission-denied') {
         setError('❌ Código incorrecto. Verifica e intenta de nuevo.');
@@ -102,93 +101,92 @@ export default function AccessGate({ children }) {
     }
   };
 
-  // Pantalla de verificación inicial
+  // Mientras verifica el token existente
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando acceso...</p>
+          <div className="text-5xl mb-4">⏳</div>
+          <div className="text-xl text-white">Verificando acceso...</div>
         </div>
       </div>
     );
   }
 
-  // Pantalla de ingreso de código
-  if (!hasAccess) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-        <div className="max-w-md w-full">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            {/* Header */}
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full mb-4">
-                <span className="text-4xl">💙</span>
-              </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Para Joaquín
-              </h1>
-              <p className="text-gray-600">
-                Un espacio privado lleno de amor
-              </p>
-            </div>
+  // Si ya tiene acceso válido, mostrar la app
+  if (hasAccess) {
+    return children;
+  }
 
-            {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  🔐 Código de acceso familiar
-                </label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="Ingresa el código"
-                  className="w-full px-4 py-4 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:outline-none text-center text-xl font-mono tracking-wider uppercase"
-                  disabled={loading}
-                  autoFocus
-                />
-                <p className="mt-2 text-xs text-gray-500 text-center">
-                  Solicita el código a un familiar
-                </p>
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                  <p className="text-red-800 text-sm text-center font-medium">
-                    {error}
-                  </p>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || !code || code.length < 4}
-                className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-xl hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Verificando...
-                  </span>
-                ) : (
-                  '🔓 Acceder'
-                )}
-              </button>
-            </form>
-
-            {/* Footer */}
-            <div className="mt-8 pt-6 border-t border-gray-200">
-              <p className="text-sm text-gray-500 text-center">
-                💙 Este espacio fue creado con amor para que Joaquín pueda ver todos los mensajes de su familia cuando esté listo
-              </p>
-            </div>
+  // Mostrar pantalla de código
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full">
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="bg-gradient-to-br from-blue-400 to-indigo-500 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-5xl">💙</span>
           </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Para Joaquín</h1>
+          <p className="text-gray-600">Un espacio privado lleno de amor</p>
+        </div>
+
+        {/* Formulario */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              🔐 Código de acceso familiar
+            </label>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Ingresa el código"
+              disabled={loading}
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-indigo-500 focus:ring focus:ring-indigo-200 transition-all uppercase tracking-wider font-mono text-center text-lg"
+              autoFocus
+              minLength={4}
+              required
+            />
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Solicita el código a un familiar
+            </p>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex items-center gap-3">
+              <span className="text-2xl">⚠️</span>
+              <p className="text-sm text-red-700 flex-1">{error}</p>
+            </div>
+          )}
+
+          {/* Botón */}
+          <button
+            type="submit"
+            disabled={loading || code.length < 4}
+            className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 rounded-xl hover:from-indigo-600 hover:to-purple-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <span className="inline-block w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></span>
+                Verificando...
+              </>
+            ) : (
+              <>
+                <span>🔓</span>
+                Acceder
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-gray-500 text-sm flex items-center justify-center gap-2">
+          <span>💙</span>
+          <p>Este espacio fue creado con amor para que Joaquín pueda ver todos los mensajes de su familia cuando esté listo</p>
         </div>
       </div>
-    );
-  }
-
-  // Usuario tiene acceso, mostrar el contenido
-  return children;
+    </div>
+  );
 }
